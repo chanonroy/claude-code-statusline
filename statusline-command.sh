@@ -80,7 +80,11 @@ fi
 
 # Model + effort
 if [ -n "$model" ]; then
-  out+=$(printf " | ${BOLD}${GOLD}%s${RESET}" "$model")
+  case "$model" in
+    *Opus*) MODEL_COLOR="$GOLD" ;;
+    *)      MODEL_COLOR="$WHITE" ;;
+  esac
+  out+=$(printf " | ${BOLD}%s%s${RESET}" "$MODEL_COLOR" "$model")
   if [ -n "$effort" ]; then
     out+=$(printf " • ${MAGENTA}%s /effort${RESET}" "$effort")
   fi
