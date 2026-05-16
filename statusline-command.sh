@@ -50,8 +50,10 @@ time_until() {
   if [ "$secs" -le 0 ]; then echo "now"; return; fi
   local hours=$(( secs / 3600 ))
   local days=$(( hours / 24 ))
+  local mins=$(( secs / 60 ))
   if [ "$days" -ge 1 ]; then echo "${days}d"
-  else echo "${hours}h"
+  elif [ "$hours" -ge 1 ]; then echo "${hours}h"
+  else echo "${mins}m"
   fi
 }
 
