@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Claude Code status line
-# Format: ~/my-project | main | Opus 4.6 | Context: [████░░░░░░] 35% • high /effort
+# Format: ~/my-project | main | Sonnet 4.6 • high /effort | Context: [████░░░░░░] 35% | ⏱ 12% (3h) | 📅 2% (4d)
 input=$(cat)
 
 # --- Working directory (short ~/... style) ---
@@ -36,6 +36,25 @@ fi
 # --- Effort ---
 effort=$(echo "$input" | jq -r '.effort.level // empty')
 
+# --- Rate limits ---
+five_hour_pct=$(echo "$input" | jq -r '.rate_limits.five_hour.used_percentage // empty')
+five_hour_resets=$(echo "$input" | jq -r '.rate_limits.five_hour.resets_at // empty')
+seven_day_pct=$(echo "$input" | jq -r '.rate_limits.seven_day.used_percentage // empty')
+seven_day_resets=$(echo "$input" | jq -r '.rate_limits.seven_day.resets_at // empty')
+
+time_until() {
+  local resets_at=$1
+  local now
+  now=$(date +%s)
+  local secs=$(( resets_at - now ))
+  if [ "$secs" -le 0 ]; then echo "now"; return; fi
+  local hours=$(( secs / 3600 ))
+  local days=$(( hours / 24 ))
+  if [ "$days" -ge 1 ]; then echo "${days}d"
+  else echo "${hours}h"
+  fi
+}
+
 # --- ANSI colors ---
 BOLD=$'\033[1m'
 CYAN=$'\033[36m'
@@ -43,23 +62,28 @@ GREEN=$'\033[32m'
 ORANGE=$'\033[38;5;208m'
 RED=$'\033[31m'
 GRAY=$'\033[38;5;236m'
+WHITE=$'\033[97m'
 MAGENTA=$'\033[35m'
+GOLD=$'\033[38;5;178m'
 RESET=$'\033[0m'
 
 # --- Assemble ---
 out=""
 
 # Directory
-out+=$(printf "${BOLD}${CYAN}%s${RESET}" "$dir_display")
+out+=$(printf "📁 ${BOLD}${CYAN}%s${RESET}" "$dir_display")
 
 # Git branch
 if [ -n "$git_str" ]; then
   out+=$(printf " | ${GREEN}%s${RESET}" "$git_str")
 fi
 
-# Model
+# Model + effort
 if [ -n "$model" ]; then
-  out+=$(printf " | ${BOLD}%s${RESET}" "$model")
+  out+=$(printf " | ${BOLD}${GOLD}%s${RESET}" "$model")
+  if [ -n "$effort" ]; then
+    out+=$(printf " • ${MAGENTA}%s /effort${RESET}" "$effort")
+  fi
 fi
 
 # Context bar with dynamic color
@@ -84,9 +108,24 @@ if [ -n "$used_pct" ]; then
   out+=$(printf " | Context: %s%s%s %s%d%%%s" "$bar_filled" "$bar_empty" "$RESET" "$BAR_COLOR" "$pct_int" "$RESET")
 fi
 
-# Effort
-if [ -n "$effort" ]; then
-  out+=$(printf " • ${MAGENTA}%s /effort${RESET}" "$effort")
+# Rate limits
+rate_color() {
+  local pct=$1
+  if [ "$pct" -ge 90 ]; then echo "$RED"
+  elif [ "$pct" -ge 50 ]; then echo "$ORANGE"
+  else echo "$WHITE"
+  fi
+}
+
+if [ -n "$five_hour_pct" ]; then
+  C=$(rate_color "$five_hour_pct")
+  t=$(time_until "$five_hour_resets")
+  out+=$(printf " | ⏱ %s%d%%%s (%s)" "$C" "$five_hour_pct" "$RESET" "$t")
+fi
+if [ -n "$seven_day_pct" ]; then
+  C=$(rate_color "$seven_day_pct")
+  t=$(time_until "$seven_day_resets")
+  out+=$(printf " | 📅 %s%d%%%s (%s)" "$C" "$seven_day_pct" "$RESET" "$t")
 fi
 
 printf "%s" "$out"
