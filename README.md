@@ -4,8 +4,10 @@ A custom status line script for [Claude Code](https://claude.ai/code).
 
 ## What it shows
 
+![preview](example.png)
+
 ```
-~/my-project | main(+2) | Sonnet 4.6 | Context: [████░░░░░░] 35% • high /effort
+~/my-project | main(+2) | Sonnet 4.6 • high /effort | Context: [████░░░░░░] 35% | ⏱ 12% (3h) | 📅 2% (4d)
 ```
 
 - **Directory** — current working directory (`~/` style)
