@@ -124,14 +124,16 @@ rate_color() {
 }
 
 if [ -n "$five_hour_pct" ]; then
-  C=$(rate_color "$five_hour_pct")
+  five_hour_int=$(printf '%.0f' "$five_hour_pct")
+  C=$(rate_color "$five_hour_int")
   t=$(time_until "$five_hour_resets")
-  out+=$(printf " | ⏱ %s%d%%%s (%s)" "$C" "$five_hour_pct" "$RESET" "$t")
+  out+=$(printf " | ⏱ %s%d%%%s (%s)" "$C" "$five_hour_int" "$RESET" "$t")
 fi
 if [ -n "$seven_day_pct" ]; then
-  C=$(rate_color "$seven_day_pct")
+  seven_day_int=$(printf '%.0f' "$seven_day_pct")
+  C=$(rate_color "$seven_day_int")
   t=$(time_until "$seven_day_resets")
-  out+=$(printf " | 📅 %s%d%%%s (%s)" "$C" "$seven_day_pct" "$RESET" "$t")
+  out+=$(printf " | 📅 %s%d%%%s (%s)" "$C" "$seven_day_int" "$RESET" "$t")
 fi
 
 printf "%s" "$out"
